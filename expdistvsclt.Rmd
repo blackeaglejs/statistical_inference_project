@@ -1,0 +1,8 @@
+---
+title: "The Exponential Distribution vs the Central Limit Theorem"
+author: "Zoheb Nensey"
+date: "October 25, 2015"
+output: pdf_document
+---
+
+
