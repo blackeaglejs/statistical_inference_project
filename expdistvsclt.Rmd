@@ -1,8 +1,37 @@
 ---
 title: "The Exponential Distribution vs the Central Limit Theorem"
 author: "Zoheb Nensey"
-date: "October 25, 2015"
-output: pdf_document
 ---
 
+### Overview
+This document is intended to show the differences between the exponential distribution and the distribution that results as a result of the central limit theorem (the normal distribution). 
 
+### Simulations
+```{r echo=FALSE, results="hide",message=FALSE}
+library(knitr)
+library(ggplot2)
+library(dplyr)
+```
+
+First, I set a number of constants in concurrence with the assignment. For this assignment, the lambda is the rate constant, and is uniform for all simulations. 
+
+```{r results="hide"}
+# Setting a seed so that this is reproducible. 
+set.seed(234234)
+
+# Setting lamba.
+lambda <- 0.2
+
+# Setting number of simulations.
+nosim <- 1000
+
+# Number of samples (per assignment)
+n <- 40
+```
+
+Then, I ran the simulations. 
+```{r cache=TRUE}
+exponential_distributions <- matrix(rexp(nosim*n, rate=lambda),nosim,n)
+exponential_means <- data.frame(means=apply(exponential_distributions, 1, mean))
+```
+### Comparing the sample mean to the theoretical mean. 
