@@ -1,0 +1,122 @@
+---
+title: "Tooth Growth"
+author: "Zoheb Nensey"
+---
+### Overview
+The purpose of this analysis is to look at tooth growth. We test the differences between different dosages and supplement combinations. 
+
+### Preliminary steps. 
+1) Load the data. 
+```{r}
+library(datasets)
+data(ToothGrowth)
+```
+2) Load useful packages. 
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+library(lattice)
+library(dplyr)
+```
+
+#### Exploratory analysis
+First, it's worth noting that the data is already sorted in a useful fashion. The supp variable indicates the supplement being used, which can be orange juice (coded as OJ), or ascorbic acid (coded as VC). The length is measured in microns. 
+
+An exploratory analysis should look at the average tooth length by supplement and dose.
+```{r}
+average_length <- ToothGrowth %>%
+      group_by(supp,dose) %>%
+      summarize(avg_len = mean(len), len_sd = sd(len), observations = n())
+```
+We can plot these on a chart. 
+```{r echo=FALSE}
+ggplot(average_length, aes(factor(dose), avg_len, fill = supp)) +
+      geom_bar(stat="identity", position = "dodge") +
+      xlab("Dosage (in mg)") +
+      ylab("Average Length (microns") + 
+      ggtitle("Average tooth length by dosage and supplement")
+```
+
+It doesn't seem surprising (logically) that tooth length grows up with the dosage of supplement. What is interesting, however, is how at some point the supplements are equal (at a dosage of 2 mg).
+
+#### Basics on the data.
+The best way to compare this data is going to be based on the group. The dplyr package already did the difficult work of averaging the data by group and giving us the number of observations in each group. You can see those results below.
+
+```{r echo=FALSE}
+head(average_length,n=6)
+```
+
+This data is useful, as it can help us calculate inferential statistics and compare by group.
+
+#### Analysis of the data
+For this analysis, we'll most likely want to know if there's differences by supplement. The easiest way to do this is to see if the data is using a t-test, since the data is limited. To do this, however, we need to see if it's normally distributed. We can make this significantly easier by creating a histogram for each supplement. 
+
+```{r}
+densityplot(~ToothGrowth$len|ToothGrowth$supp,
+            xlab = "Tooth Length (in microns)",
+            main = "Distributions by supplement type")
+```
+
+This data is imperfect, but it does seem reasonably well distributed and not overly skewed, especially since the t-test is robust to this assumption.
+
+Now, let's go ahead and compare the growth of teeth by supplement type.
+The null hypothesis for this will be that there is no difference between supplement types for tooth growth. The alternate hypothesis is 2-sided and says that there is a difference. For this test, we'll be setting the alpha at .05. 
+
+```{r}
+results <- t.test(len ~ supp, 
+       data=ToothGrowth, 
+       paired=FALSE,
+       conf.level = 0.95)
+
+pval <- results$p.value
+```
+
+Comparing these two groups, we can see that the 95% confidence interval for the 2-sided test crosses zero and is not significant. Further, the p-value is `r pval`, which is lower than the specified alpha of .05.
+
+We should also compare these supplements by dosage level, as this well tell us if there truly is a difference between the lower dosages as it appeared during exploratory data analysis. 
+
+We can start by subsetting the data by dosage level, then running t-tests on each subset.
+```{r echo=FALSE}
+milligram_0.5 <- subset(ToothGrowth,dose==0.5)
+milligram_1.0 <- subset(ToothGrowth,dose==1.0)
+milligram_2.0 <- subset(ToothGrowth,dose==2.0)
+```
+
+For the 0.5 milligram group: 
+
+```{r echo=FALSE}
+results_0.5 <- t.test(len ~ supp, 
+       data=milligram_0.5, 
+       paired=FALSE,
+       conf.level = 0.95)
+
+pval0.5 <- results_0.5$p.value
+```
+
+At this dosage level, we can see that there is a difference. The 95% confidence interval does not cross zero, and the p-value is is `r pval0.5`, which is less than the alpha of 0.05.
+
+For the 1.0 milligram group: 
+
+```{r echo=FALSE}
+results_1.0 <- t.test(len ~ supp, 
+       data=milligram_1.0, 
+       paired=FALSE,
+       conf.level = 0.95)
+
+pval1.0 <- results_1.0$p.value
+```
+At this dosage level, we can once again see a difference. The 95% confidence interval does not cross zero, and the p-value is is `r pval1.0`, which is less than the alpha of 0.05.
+
+For the 2.0 milligram group: 
+
+```{r echo=FALSE}
+results_2.0 <- t.test(len ~ supp, 
+       data=milligram_2.0, 
+       paired=FALSE,
+       conf.level = 0.95)
+
+pval2.0 <- results_2.0$p.value
+```
+At this level, however, everything changes. There is no difference when the dosage is 2.0 milligrams, as the 95% confidence intervaldoes cross zero and the p-value is `r pval2.0`, which is extremely high.
+
+#### Conclusions 
+It appears that there isn't a huge difference once dosages grow past 2.0 mg, but at smaller dosages there appears to be a large difference. 
