@@ -7,10 +7,10 @@ author: "Zoheb Nensey"
 This document is intended to show the differences between the exponential distribution and the distribution that results as a result of the central limit theorem (the normal distribution). 
 
 ### Simulations
-```{r echo=FALSE, results="hide",message=FALSE}
+Loading necessary libraries. 
+```{r echo=TRUE, results="hide",message=FALSE}
 library(knitr)
 library(ggplot2)
-library(dplyr)
 ```
 
 First, I set a number of constants in concurrence with the assignment. For this assignment, the lambda is the rate constant, and is uniform for all simulations. 
@@ -35,3 +35,54 @@ exponential_distributions <- matrix(rexp(nosim*n, rate=lambda),nosim,n)
 exponential_means <- data.frame(means=apply(exponential_distributions, 1, mean))
 ```
 ### Comparing the sample mean to the theoretical mean. 
+```{r echo = FALSE, results='hide'}
+theoretical_mean <- 1/lambda
+```
+At the theoretical level, the mean of an exponential distribution is `r theoretical_mean`, or at least for our purposes, 1/lambda. 
+
+Upon calculating the mean of the sample distribution as shown below, we can see that the sample mean is very close to the theoretical mean. 
+```{r}
+sample_mean <- mean(exponential_means$means)
+```
+The sample mean is `r sample_mean`. 
+
+This can also be shown in the form of a histogram. The line in the center is the theoretical mean. Note that the highest density is located around the theoretical mean.
+
+```{r echo=FALSE}
+hist(exponential_means$means, breaks=50,
+     main="Distribution of exponential means",
+     xlab = "means",
+     ylab = "density")
+abline(v=theoretical_mean,col="red")
+```
+
+Though the peak of the distribution is just to the right of 5, increasing the number of simulations would bring the distribution closer and closer to the theoretical mean.
+
+### Comparing the theoretical variance to the sample variance.
+The givens indicate that the theoretical standard deviation is 1/lambda divided by the square root of the sample size. The theoretical variance, which is simply the standard deviation squared, can be derived from this.
+
+```{r}
+theoretical_sd <- (1/lambda)/sqrt(n)
+theoretical_var <- theoretical_sd^2
+```
+
+The theoretical standard deviation is `r theoretical_sd` and the theoretical variance is `r theoretical_var`.
+
+Now we can calculate the standard deviation and variance of the sample itself by taking the standard deviation of the sample means.
+```{r}
+sample_sd <- sd(exponential_means$means)
+sample_var <- sample_sd^2
+```
+The sample's standard deviation is `r sample_sd` and the variance is `r sample_var`. 
+
+These numbers, due to the large sample size, are not particularly different. The sample variance of `r sample_var` is not very different from the theoretical value of `r theoretical_var`.
+
+### Comparing to the normal distribution.
+The plot below shows the normal distribution (red line) superimposed on top of the distribution of the sample mean (blue line). Given that there are few differences between the sample and the theoretical distribution, it can serve as a useful approximation for comparison to the normal distribution.
+```{r}
+ggplot(data=exponential_means, aes(x=means)) + 
+      geom_histogram(binwidth=0.1,aes(y=..density..),alpha=0.2) +
+      stat_function(fun = dnorm, arg=list(mean = theoretical_mean, sd = theoretical_sd)
+                    , col = "red") +
+      geom_density(col="blue")
+```
